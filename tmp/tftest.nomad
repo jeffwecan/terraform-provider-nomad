@@ -3,13 +3,31 @@ job "tftest" {
   type        = "batch"
 
   parameterized {
-    meta_required = ["provider_branch", "terraform_version", "nomad_version"]
+    meta_optional = [
+      "provider_branch",
+      "consul_version",
+      "nomad_version",
+      "terraform_version",
+      "vault_version"
+    ]
+  }
+
+  meta {
+    provider_branch   = "master"
+    consul_version    = "1.9.0"
+    nomad_version     = "0.12.9"
+    terraform_version = "0.14.0"
+    vault_version     = "1.6.0"
   }
 
   group "foo" {
     network {
       port "nomad" {
         to = 4646
+      }
+
+      port "consul" {
+        to = 8500
       }
     }
 
@@ -24,11 +42,12 @@ job "tftest" {
           "SYS_ADMIN",
         ]
 
-        ports = ["nomad"]
+        ports = ["nomad", "consul"]
 
         volumes = [
           "local/opt:/opt/hashicorp",
           "local/provider:/root/provider",
+          "local/bin:/usr/local/bin",
         ]
       }
 
@@ -38,23 +57,23 @@ job "tftest" {
       }
 
       artifact {
+        source      = "https://releases.hashicorp.com/consul/${NOMAD_META_consul_version}/consul_${NOMAD_META_consul_version}_linux_amd64.zip"
+        destination = "local/bin"
+      }
+
+      artifact {
         source      = "https://releases.hashicorp.com/nomad/${NOMAD_META_nomad_version}/nomad_${NOMAD_META_nomad_version}_linux_amd64.zip"
-        destination = "local/opt"
-      }
-
-      artifact {
-        source      = "https://releases.hashicorp.com/consul/1.8.6/consul_1.8.6_linux_amd64.zip"
-        destination = "local/opt"
-      }
-
-      artifact {
-        source      = "https://releases.hashicorp.com/vault/1.6.0/vault_1.6.0_linux_amd64.zip"
-        destination = "local/opt"
+        destination = "local/bin"
       }
 
       artifact {
         source      = "https://releases.hashicorp.com/terraform/${NOMAD_META_terraform_version}/terraform_${NOMAD_META_terraform_version}_linux_amd64.zip"
-        destination = "local/opt"
+        destination = "local/bin"
+      }
+
+      artifact {
+        source      = "https://releases.hashicorp.com/vault/${NOMAD_META_vault_version}/vault_${NOMAD_META_vault_version}_linux_amd64.zip"
+        destination = "local/bin"
       }
 
       artifact {
